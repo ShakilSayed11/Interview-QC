@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality and Error Checks for Credibility Interviewers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+        .header-table th, .header-table td {
+            border: none;
+            text-align: left;
+            padding: 8px;
+        }
+        .header-table {
+            margin-bottom: 40px;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .fatal {
+            color: red;
+            font-weight: bold;
+        }
+        .non-fatal {
+            color: green;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 4px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
+            border-color: #42a5f5;
+            box-shadow: 0 0 5px rgba(66, 165, 245, 0.5);
+        }
+        .overall-performance {
+            text-align: left;
+            padding: 12px;
+        }
+        .center-align {
+            text-align: center;
+        }
+        .material-icons {
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .save-button {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .save-button button {
+            background-color: #42a5f5;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .save-button button:hover {
+            background-color: #1e88e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="content">
+        <h2>Quality Check - Interview</h2>
+        <table class="header-table">
+            <tr>
+                <th>Interviewer Name:</th>
+                <td><input type="text" id="interviewerName"></td>
+                <th>Interview Date:</th>
+                <td><input type="date" id="interviewDate"></td>
+            </tr>
+            <tr>
+                <th>Student Name and ID:</th>
+                <td><input type="text" id="studentNameID"></td>
+                <th>QC Date:</th>
+                <td><input type="date" id="qcDate"></td>
+            </tr>
+        </table>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Error Category</th>
+                    <th>Description</th>
+                    <th>Severity</th>
+                    <th>Time Stamp</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody id="errorTableBody">
+                <!-- Dynamic rows will be added here -->
+            </tbody>
+        </table>
+        <div class="overall-performance">
+            <label for="overallPerformance">Overall call performance:</label>
+            <select id="overallPerformance" class="browser-default">
+                <option value="" disabled selected>Select performance</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Good">Good</option>
+                <option value="Average">Average</option>
+                <option value="Poor">Poor</option>
+            </select>
+        </div>
+        <div class="save-button">
+            <button onclick="saveAsPDF()">Save as PDF</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        const errorCategories = [
+            {category: "IQ Filling - Interview Tab/Skype status", description: "Failing to properly document or update the interview status or information in the designated system, which can lead to confusion or miscommunication.", severity: "Fatal"},
+            {category: "Behavioral Disrespect", description: "Instances where the interviewer displays rude or disrespectful behavior, which can create a negative atmosphere and affect the outcome of the interview.", severity: "Fatal"},
+            {category: "Acceptance of Incorrect Answers", description: "Allowing inaccurate or incomplete responses to go unaddressed during the interview, which can result in incorrect assessments or conclusions. (Course , centre , modules, entry requirements, finances)", severity: "Fatal"},
+            {category: "Compliance Negligence", description: "Failing to inquire about or verify important compliance-related information, such as visa status or previous study history, which can lead to legal or administrative complications later on.", severity: "Fatal"},
+            {category: "Misguided Probing", description: "Offering misguided or irrelevant prompts or suggestions to the interviewee during the interview, which can lead to confusion or misdirection in their responses.", severity: "Fatal"},
+            {category: "Recording Upload Failure on T: drive/sharepoint", description: "Neglecting to upload the interview recording to the designated platforms, which can result in lost records and hinder review or analysis.", severity: "Fatal"},
+            {category: "Incorrect Evaluation", description: "Providing an inaccurate or incorrect assessment of the interviewee's performance, which can hinder their opportunities or outcomes.", severity: "Fatal"},
+            {category: "Professionalism Lapse", description: "Demonstrating unprofessional behavior or lack of preparedness during the interview, such as poor presentation skills or disorganized communication, which can undermine credibility and effectiveness.", severity: "Non fatal"},
+            {category: "Question Skipping", description: "Failing to address or ask certain questions during the interview, which can result in gaps or inconsistencies in the assessment process.", severity: "Fatal"},
+            {category: "Inappropriate Questions", description: "Asking questions that are discriminatory, illegal, or irrelevant to the requirements can create discomfort for the interviewee and may lead to legal issues.", severity: "Fatal"},
+            {category: "Procedural Errors", description: "Interviewer deviates from established protocols, guidelines, or best practices during the interview process. Such deviations can lead to inconsistencies, inefficiencies, or incorrect conclusions.", severity: "Fatal"},
+            {category: "Verification Oversight", description: "Verifying the authenticity or validity of the interviewee's passport or related documentation.", severity: "Fatal"},
+            {category: "Visual Accessibility Problems", description: "Situations where the interviewer faces challenges in visually accessing or perceiving important details, such as the interviewee's facial expressions, due to various factors like lighting conditions, background clutter, or camera angles.", severity: "Non fatal"},
+            {category: "Passivity in Questioning", description: "Not engaging with the interviewee thoroughly, through follow-up or cross-questions.", severity: "Non fatal"},
+            {category: "Feedback Inaccuracy", description: "Providing feedback that is unclear, inaccurate, or inappropriate for the situation, which can hinder the interviewee's understanding of their performance and areas for improvement.", severity: "Fatal"},
+            {category: "Not Closing the Interview Properly", description: "Failing to summarize key points, provide next steps, or allow the interviewee to ask questions can leave the conversation feeling incomplete and may leave the interviewee with unanswered questions.", severity: "Non fatal"},
+            {category: "Tracker not updated", description: "Interviewer deviates from established protocols, guidelines, or best practices during the interview process. Such deviations can lead to inconsistencies, inefficiencies, or incorrect conclusions.", severity: "Fatal"},
+            {category: "Assessment sheet not filled properly", description: "Neglecting to complete or fill out the assessment sheet or evaluation form, which can lead to incomplete or unrounded judgments about the interviewee. Specialty (UGIC and UKIC)", severity: "Fatal"},
+            {category: "Improper Introduction", description: "Providing a vague or unclear introduction at the start of the interview.", severity: "Non fatal"},
+            {category: "Camera issues (Background , Adjustment)", description: "Facing technical difficulties with the camera, such as poor background visibility or improper adjustments, which can affect the interview and impact professionalism.", severity: "Non fatal"},
+            {category: "Poor Listening Skills", description: "Failing to actively listen to the interviewee's responses, leading to misunderstandings or missed details.", severity: "Non fatal"},
+            {category: "Not Allowing Sufficient Time for Answers", description: "Rushing through questions or not giving the interviewee enough time to respond can inhibit thoughtful responses and may overlook valuable information.", severity: "Non fatal"},
+            {category: "Assessment sheet not Uploaded on cas shield", description: "Failing to upload the completed assessment results to the appropriate system or database, which can lead to administrative issues and lack of documentation.", severity: "Fatal"},
+            {category: "Communication Lapse", description: "This category encompasses various issues related to failures in maintaining effective and continuous communication during interviews, which can be prolonged without limitation. It can encompass various scenarios where communication breakdowns occur, impacting the user experience. Dead Air", severity: "Non fatal"}
+        ];
+
+        const tableBody = document.getElementById('errorTableBody');
+
+        errorCategories.forEach((error, index) => {
+            const row = document.createElement('tr');
+            const severityClass = error.severity === 'Fatal' ? 'fatal' : 'non-fatal';
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${error.category}</td>
+                <td>${error.description}</td>
+                <td class="${severityClass}">${error.severity}</td>
+                <td><textarea class="timestamp"></textarea></td>
+                <td><textarea class="remarks"></textarea></td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+function saveAsPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Header
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setFillColor(200, 200, 255); // light blue background
+    doc.rect(0, 0, pageWidth, 30, 'F');
+
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 128); // dark blue text
+    doc.text('QC Check - Interview', pageWidth / 2, 15, { align: 'center' });
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0); // black text
+    doc.text('Developed By Shakil Sayed', pageWidth / 2, 25, { align: 'center' });
+
+    const interviewDate = document.getElementById('interviewDate').value;
+    const qcDate = document.getElementById('qcDate').value;
+    const studentNameID = document.getElementById('studentNameID').value;
+    const interviewerName = document.getElementById('interviewerName').value;
+    const overallPerformance = document.getElementById('overallPerformance').value;
+
+    const infoRows = [
+        ['Interview Date:', interviewDate],
+        ['QC Date:', qcDate],
+        ['Student Name and ID:', studentNameID],
+        ['Interviewer Name:', interviewerName]
+    ];
+
+    doc.autoTable({
+        head: [['Assessment Log', 'Input']],
+        body: infoRows.map(([label, value]) => [label, { content: value, styles: { fontStyle: 'normal' } }]),
+        startY: 40
+    });
+
+    const rows = [];
+    const timestamps = document.getElementsByClassName('timestamp');
+    const remarks = document.getElementsByClassName('remarks');
+
+    errorCategories.forEach((error, index) => {
+        const timestamp = timestamps[index].value;
+        const remark = remarks[index].value;
+
+        if (timestamp.trim() && remark.trim()) {
+            rows.push([
+                index + 1,
+                error.category,
+                error.description,
+                {
+                    content: error.severity,
+                    styles: {
+                        textColor: error.severity === 'Fatal' ? [255, 0, 0] : [0, 128, 0], // red for Fatal, green for Non Fatal
+                        fontStyle: 'bold'
+                    }
+                },
+                timestamp,
+                remark
+            ]);
+        }
+    });
+
+    if (rows.length > 0) {
+        doc.autoTable({
+            head: [['Sr. No.', 'Error Category', 'Description', 'Severity', 'Time Stamp', 'Remarks']],
+            body: rows,
+            startY: doc.lastAutoTable.finalY + 30
+        });
+    } else {
+        doc.text("No errors were reported.", 10, doc.lastAutoTable.finalY + 30);
+    }
+
+    doc.text(`Overall Performance: ${overallPerformance}`, 10, doc.lastAutoTable.finalY + 20 + (rows.length ? 30 : 0));
+
+    const fileName = `${qcDate} ${studentNameID} - ${interviewerName}.pdf`;
+    doc.save(fileName);
+}
+
+    </script>
+</body>
+</html>
